@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>業務日誌生成ツール</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+
+    <div id="app-container">
+        <nav class="sidebar">
+            <div class="sidebar-menu">
+                <button class="tab-btn active" data-tab="title"><i class="fas fa-heading fa-fw"></i> 1. タイトル</button>
+                <button class="tab-btn" data-tab="task"><i class="fas fa-tasks fa-fw"></i> 2. 業務内容</button>
+                <button class="tab-btn" data-tab="text"><i class="fas fa-pencil-alt fa-fw"></i> 3. 本文執筆</button>
+                <button class="tab-btn" data-tab="output"><i class="fas fa-file-export fa-fw"></i> 4. 出力</button>
+            </div>
+            
+            <div class="sidebar-footer">
+                <button id="reset-btn" class="tab-btn reset-btn"><i class="fas fa-trash-alt fa-fw"></i> 全リセット</button>
+            </div>
+        </nav>
+        <div class="main-area-wrapper">
+            
+            <main id="main-content">
+
+                <div class="tab-pane active" id="title-tab">
+                    <h1>業務日誌タイトル生成</h1>
+                    
+                    <!-- 日付表示 (自動取得のみに戻しました) -->
+                    <div id="date-display-container">
+                        <i class="far fa-calendar-alt"></i> 今日: <span id="date-display"></span>
+                    </div>
+
+                    <div class="input-group">
+                        <label>時限 (複数選択可)</label>
+                        <div id="period-options">
+                            <input type="checkbox" id="p1" value="1"><label for="p1">1限</label>
+                            <input type="checkbox" id="p2" value="2"><label for="p2">2限</label>
+                            <input type="checkbox" id="p3" value="3"><label for="p3">3限</label>
+                            <input type="checkbox" id="p4" value="4"><label for="p4">4限</label>
+                            <input type="checkbox" id="p5" value="5"><label for="p5">5限</label>
+                            <input type="checkbox" id="p-temp" value="臨時"><label for="p-temp">臨時</label>
+                        </div>
+                    </div>
+                    <div class="input-group">
+                        <label>オプション</label>
+                        <div class="toggle-wrapper">
+                            <input type="checkbox" id="sa-toggle"> 
+                            <label for="sa-toggle" id="sa-option">"SA" を含める</label>
+                        </div>
+                    </div>
+                    <div class="input-group">
+                        <label for="surname-input">名字</label>
+                        <input type="text" id="surname-input" placeholder="例: 鈴木" class="input-rounded">
+                    </div>
+                    <div class="input-group">
+                        <label>プレビュー</label>
+                        <div class="preview-container">
+                            <input type="text" id="title-result-preview" class="preview-box" readonly>
+                            <button id="title-copy-button"><i class="fas fa-clipboard"></i> コピー</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="tab-pane" id="task-tab">
+                    <h1>業務内容生成</h1>
+                    <div class="input-group">
+                        <label>定型業務 (複数選択可)</label>
+                        <!-- 5列レイアウト用のコンテナ -->
+                        <div id="task-options">
+                            <input type="checkbox" id="task1" value="開室作業"><label for="task1">開室作業</label>
+                            <input type="checkbox" id="task2" value="閉室作業"><label for="task2">閉室作業</label>
+                            <input type="checkbox" id="task3" value="出席調査"><label for="task3">出席調査</label>
+                            <input type="checkbox" id="task4" value="窓口対応"><label for="task4">窓口対応</label>
+                            <input type="checkbox" id="task5" value="レポート整理"><label for="task5">レポート整理</label>
+                            <input type="checkbox" id="task6" value="自家印刷"><label for="task6">自家印刷</label>
+                            <input type="checkbox" id="task7" value="トラブル対応"><label for="task7">トラブル対応</label>
+                            <input type="checkbox" id="task8" value="ミニッツ印刷"><label for="task8">ミニッツ印刷</label>
+                            <!-- 新規追加項目 -->
+                            <input type="checkbox" id="task9" value="機器設置/回収"><label for="task9">機器設置/回収</label>
+                            <input type="checkbox" id="task10" value="研修"><label for="task10">研修</label>
+                        </div>
+                    </div>
+                    <div class="input-group">
+                        <label for="custom-task-input">その他の業務 (改行で複数入力可)</label>
+                        <textarea id="custom-task-input" rows="3" placeholder="例: 機材メンテナンス" class="input-rounded"></textarea>
+                    </div>
+                    <div class="input-group">
+                        <label>プレビュー</label>
+                        <div class="preview-container">
+                            <input type="text" id="task-result-preview" class="preview-box" readonly>
+                            <button id="task-copy-button"><i class="fas fa-clipboard"></i> コピー</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="tab-pane" id="text-tab">
+                    <h1>本文執筆</h1>
+                    
+                    <!-- クイックインサート機能（内容変更） -->
+                    <div class="quick-insert-area">
+                        <label>見出し挿入:</label>
+                        <div class="chip-container">
+                            <button class="chip-btn" data-text="【業務コメント】">【業務コメント】</button>
+                            <button class="chip-btn" data-text="【引継ぎ事項】">【引継ぎ事項】</button>
+                            <button class="chip-btn" data-text="【相談】">【相談】</button>
+                            <button class="chip-btn" data-text="【雑記】">【雑記】</button>
+                        </div>
+                    </div>
+
+                    <div class="input-group">
+                        <label>本文 <span id="char-count" style="font-weight:normal; font-size:0.9em; color:#888; margin-left:10px;">(0文字)</span></label>
+                        <textarea id="text-editor" class="input-rounded" placeholder="業務の詳細を入力してください..."></textarea>
+                    </div>
+                </div>
+
+                <div class="tab-pane" id="output-tab">
+                    <h1>出力（コピー）</h1>
+                    <div class="input-group">
+                        <label>タイトル</label>
+                        <div class="preview-container">
+                            <input type="text" id="output-title-preview" class="preview-box" readonly>
+                            <button id="output-title-copy"><i class="fas fa-clipboard"></i> コピー</button>
+                        </div>
+                    </div>
+                    <div class="input-group">
+                        <label>本文（業務内容 + 執筆した本文）</label>
+                        <div class="output-body-area">
+                            <textarea id="output-body-preview" class="preview-box" readonly></textarea>
+                            <button id="output-body-copy" class="standalone-copy-btn"><i class="fas fa-copy"></i> 本文をコピー</button>
+                        </div>
+                    </div>
+                </div>
+
+            </main>
+
+            <div class="navigation-buttons">
+                <button id="prev-btn" class="nav-btn"><i class="fas fa-chevron-left"></i> 戻る</button>
+                <button id="next-btn" class="nav-btn">進む <i class="fas fa-chevron-right"></i></button>
+            </div>
+            
+        </div>
+    </div>
+
+    <script src="script.js" defer></script>
+</body>
+</html>

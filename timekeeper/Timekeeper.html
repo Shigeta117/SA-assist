@@ -1,0 +1,458 @@
+﻿<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>大学時間割クロック</title>
+  
+  <!-- ==========================================
+       ▼ CSS（デザイン）エリア ▼
+       後から分離する場合はこの中身を style.css に移してください
+  =========================================== -->
+  <style>
+    /* 全体の基本設定 */
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    
+    body {
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      font-family: 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', 'Hiragino Sans', Meiryo, sans-serif;
+      transition: background-color 0.5s, color 0.5s; /* 色の切り替えを滑らかに */
+      overflow: hidden; /* スクロールバー非表示 */
+    }
+
+    /* ----------------------------------
+       テーマカラー設定（状態に応じて body のクラスを付け替えます）
+       ---------------------------------- */
+    /* 【授業中】青系テーマ */
+    body.status-class { background-color: #e0f2fe; color: #0c4a6e; }
+    body.status-class .left-section { background-color: #bae6fd; }
+
+    /* 【休み時間】黄色系テーマ */
+    body.status-break { background-color: #fef9c3; color: #854d0e; }
+    body.status-break .left-section { background-color: #fef08a; }
+
+    /* 【時間外（開室中/終了）】グレー系テーマ */
+    body.status-out { background-color: #f3f4f6; color: #1f2937; }
+    body.status-out .left-section { background-color: #e5e7eb; }
+
+    /* ----------------------------------
+       レイアウト設定（画面を 3:2 で上下に分割）
+       ---------------------------------- */
+    /* 上セクション（時計） */
+    .top-section {
+      flex: 3; /* 高さの比率 3 */
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      border-bottom: 3px solid rgba(0, 0, 0, 0.05);
+    }
+
+    #date-display {
+      font-size: 3.5vw;
+      font-weight: bold;
+      opacity: 0.8;
+      margin-bottom: 1vh;
+    }
+
+    #time-display {
+      font-size: 15vw;
+      font-weight: 900;
+      line-height: 1;
+      font-variant-numeric: tabular-nums; /* デジタル時計の数字幅を固定してブレを防ぐ */
+      letter-spacing: -0.02em;
+    }
+
+    /* 下セクション全体 */
+    .bottom-section {
+      flex: 2; /* 高さの比率 2 */
+      display: flex;
+    }
+
+    /* 左下セクション（状態表示） */
+    .left-section {
+      flex: 1; /* 幅 50% */
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 8vw;
+      font-weight: 900;
+      border-right: 3px solid rgba(0, 0, 0, 0.05);
+      text-align: center;
+    }
+
+    /* 右下セクション（詳細タイム） */
+    .right-section {
+      flex: 1; /* 幅 50% */
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      padding: 0 3vw;
+    }
+
+    /* 右下セクション内のパーツ */
+    .time-block {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    .start-time {
+      font-size: 3vw;
+      font-weight: bold;
+      opacity: 0.7;
+    }
+
+    .end-time {
+      font-size: 7.5vw;
+      font-weight: 900;
+      line-height: 1;
+    }
+
+    .passed-time {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      background-color: rgba(255, 255, 255, 0.5);
+      padding: 2vh 3vw;
+      border-radius: 1.5vw;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+    }
+
+    .passed-time .sub-text {
+      font-size: 2.5vw;
+      font-weight: bold;
+      opacity: 0.8;
+    }
+
+    .passed-time .num {
+      font-size: 6vw;
+      font-weight: 900;
+      line-height: 1.1;
+    }
+
+    .passed-time .unit {
+      font-size: 2vw;
+      margin-left: 0.2vw;
+    }
+
+    /* ----------------------------------
+       アラーム用通知（トースト）の設定
+       ---------------------------------- */
+    .toast {
+      position: fixed;
+      top: 3vh;
+      right: 3vw;
+      background-color: rgba(255, 255, 255, 0.95);
+      color: #333;
+      padding: 2vh 3vw;
+      border-radius: 1vw;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+      border-left: 1vw solid #ea580c; /* 左側にオレンジのアクセント */
+      z-index: 1000;
+      /* 初期状態は画面の右外に隠しておく */
+      transform: translateX(150%);
+      transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+    .toast.show {
+      transform: translateX(0); /* 画面内にスライドイン */
+    }
+    .toast h2 {
+      font-size: 2.5vw;
+      color: #ea580c;
+      margin-bottom: 0.5vh;
+    }
+    .toast p {
+      font-size: 1.5vw;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body class="status-out">
+
+  <!-- ==========================================
+       ▼ HTML（画面の骨組み）エリア ▼
+  =========================================== -->
+  <div class="top-section">
+    <div id="date-display">----年--月--日(-)</div>
+    <div id="time-display">--:--:--</div>
+  </div>
+  <div class="bottom-section">
+    <div class="left-section" id="status-display">
+      読込中...
+    </div>
+    <div class="right-section" id="detail-display">
+      <!-- JavaScriptで中身を書き換えます -->
+    </div>
+  </div>
+
+  <!-- アラーム通知用トースト（右上に表示） -->
+  <div id="alarm-toast" class="toast">
+    <h2>⏰ お疲れ様でした！</h2>
+    <p>シフト終了時間（<span id="toast-shift-time"></span>）</p>
+  </div>
+
+  <!-- ==========================================
+       ▼ 設定 ＆ JavaScriptエリア ▼
+  =========================================== -->
+  <script>
+    // ----------------------------------------------------
+    // 【設定エリア】タイムテーブルデータ
+    // ※後から分離する場合はここを timetable.js 等に移してください
+    // ※開始時間(start)と終了時間(end)を書き換えるだけで時間を調整できます
+    // ----------------------------------------------------
+    const timetableData = [
+      { name: "1限", start: "09:00", end: "10:30" },
+      { name: "2限", start: "10:40", end: "12:10" },
+      { name: "3限", start: "13:00", end: "14:30" },
+      { name: "4限", start: "14:40", end: "16:10" },
+      { name: "5限", start: "16:20", end: "17:50" },
+      { name: "6限", start: "18:00", end: "19:30" }
+    ];
+
+    // ▼ 追加：シフト終了時間の設定（"HH:MM" 形式で複数指定可能） ▼
+    const shiftEndTimes = [
+      "10:50",
+      "12:30",
+      "14:50",
+      "16:30",
+      "18:00"
+    ]; 
+
+    // ----------------------------------------------------
+    // 【ロジックエリア】アプリの動作プログラム
+    // ※後から分離する場合はここを main.js 等に移してください
+    // ----------------------------------------------------
+    const days = ["日", "月", "火", "水", "木", "金", "土"];
+    let lastAlarmCheckedMinute = ""; // アラーム画面の連続表示を防ぐための記録
+    let lastScheduledMinute = ""; // 音声スケジュールの重複を防ぐための記録
+
+    // --- 補助関数 ---
+    // 時刻文字列 ("09:00") を「0時からの経過分数」に変換する
+    function timeToMinutes(timeStr) {
+      const parts = timeStr.split(':');
+      return parseInt(parts[0], 10) * 60 + parseInt(parts[1], 10);
+    }
+
+    // デジタル時計用のフォーマット (例: "09:05:03")
+    function formatTime(date) {
+      const h = String(date.getHours()).padStart(2, '0');
+      const m = String(date.getMinutes()).padStart(2, '0');
+      const s = String(date.getSeconds()).padStart(2, '0');
+      return `${h}:${m}:${s}`;
+    }
+
+    // 日付用のフォーマット (例: "2026年4月11日(土)")
+    function formatDate(date) {
+      return `${date.getFullYear()}年${date.getMonth() + 1}月${date.getDate()}日(${days[date.getDay()]})`;
+    }
+
+    // --- アラーム（時報音）スケジュール処理 ---
+    function scheduleJiho(nowDate) {
+      try {
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        const ctx = new AudioContext();
+        const currentTime = ctx.currentTime;
+
+        // 定刻（次の分の00秒）までの秒数を正確に計算
+        const targetDate = new Date(nowDate.getTime());
+        targetDate.setSeconds(0);
+        targetDate.setMilliseconds(0);
+        targetDate.setMinutes(targetDate.getMinutes() + 1); 
+        const diffSeconds = (targetDate.getTime() - nowDate.getTime()) / 1000;
+
+        // 指定した時間・周波数・長さで音を鳴らす補助関数
+        function createPip(time, freq, duration) {
+          const osc = ctx.createOscillator();
+          const gainNode = ctx.createGain();
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(freq, time);
+          gainNode.gain.setValueAtTime(0.1, time); // 音量
+          osc.connect(gainNode);
+          gainNode.connect(ctx.destination);
+          osc.start(time);
+          osc.stop(time + duration);
+        }
+
+        // 定刻の2秒前(58秒)、1秒前(59秒)、定刻(00秒)に鳴るよう予約する
+        createPip(currentTime + diffSeconds - 2, 880, 0.1); // 58秒：ピッ
+        createPip(currentTime + diffSeconds - 1, 880, 0.1); // 59秒：ピッ
+        createPip(currentTime + diffSeconds, 1760, 1.0);    // 00秒：ピーー
+      } catch(e) {
+        console.log("音声の再生がブロックされました。");
+      }
+    }
+
+    let toastTimeout; // タイマー管理用変数
+
+    // アラーム通知を画面右上に表示する
+    function triggerAlarm(shiftTime) {
+      const toast = document.getElementById('alarm-toast');
+      document.getElementById('toast-shift-time').innerText = shiftTime;
+      toast.classList.add('show');
+      // ※音の再生は scheduleJiho() で事前に行うためここからは削除しました
+
+      // 既にタイマーが動いていたらキャンセルする（誤作動防止）
+      if (toastTimeout) {
+        clearTimeout(toastTimeout);
+      }
+      
+      // 1分(60000ミリ秒)後に自動でクラスを外して隠す
+      toastTimeout = setTimeout(() => {
+        toast.classList.remove('show');
+      }, 60000);
+    }
+
+    // --- 現在のステータス判定 ---
+    function getCurrentStatus(nowMinutes) {
+      for (let i = 0; i < timetableData.length; i++) {
+        const currentClass = timetableData[i];
+        const startMin = timeToMinutes(currentClass.start);
+        const endMin = timeToMinutes(currentClass.end);
+        
+        // パターンA：授業中の場合
+        if (nowMinutes >= startMin && nowMinutes <= endMin) {
+          return { 
+            type: 'class', 
+            data: currentClass, 
+            passedMin: nowMinutes - startMin 
+          };
+        }
+        
+        // パターンB：休み時間（現在の時限と次の時限の間）の場合
+        if (i < timetableData.length - 1) {
+          const nextClass = timetableData[i + 1];
+          const nextStartMin = timeToMinutes(nextClass.start);
+          if (nowMinutes > endMin && nowMinutes < nextStartMin) {
+            return { 
+              type: 'break', 
+              prev: currentClass, 
+              next: nextClass, 
+              remainingMin: nextStartMin - nowMinutes 
+            };
+          }
+        }
+      }
+      
+      // パターンC：全ての授業時間外の場合
+      const firstStartMin = timeToMinutes(timetableData[0].start);
+      if (nowMinutes < firstStartMin) {
+        return { type: 'before', next: timetableData[0] }; // 1限より前
+      }
+      return { type: 'after' }; // 最後の授業より後
+    }
+
+    // --- 画面表示の更新 ---
+    function updateView() {
+      const now = new Date();
+      
+      // --- シフト終了時間のアラーム判定 ---
+
+      // 1. 【音声のスケジュール】（対象時刻の1分前の「50秒」を過ぎたら音の予約を入れる）
+      const nextMinTime = new Date(now.getTime() + 60000); 
+      const nextHM = String(nextMinTime.getHours()).padStart(2, '0') + ":" + String(nextMinTime.getMinutes()).padStart(2, '0');
+      
+      if (shiftEndTimes.includes(nextHM) && now.getSeconds() >= 50) {
+        if (lastScheduledMinute !== nextHM) {
+          scheduleJiho(now);
+          lastScheduledMinute = nextHM;
+        }
+      }
+
+      // 2. 【画面表示（トースト）の実行】（定刻の00秒になったら画面右上に表示）
+      const currentHM = String(now.getHours()).padStart(2, '0') + ":" + String(now.getMinutes()).padStart(2, '0');
+      if (shiftEndTimes.includes(currentHM)) {
+        if (lastAlarmCheckedMinute !== currentHM) {
+          triggerAlarm(currentHM);
+          lastAlarmCheckedMinute = currentHM;
+        }
+      } else {
+        lastAlarmCheckedMinute = "";
+      }
+
+      // 1. 上セクション（時計）の更新
+      document.getElementById('date-display').innerText = formatDate(now);
+      document.getElementById('time-display').innerText = formatTime(now);
+
+      // 現在の時刻を「分」に変換（0:00からの分数）
+      const nowMinutes = now.getHours() * 60 + now.getMinutes();
+      const status = getCurrentStatus(nowMinutes);
+      
+      const body = document.body;
+      const statusDisplay = document.getElementById('status-display');
+      const detailDisplay = document.getElementById('detail-display');
+
+      // 2. 下セクション（状態と詳細）の更新
+      // 一旦すべてのテーマクラスを外す
+      body.className = '';
+
+      if (status.type === 'class') {
+        body.classList.add('status-class');
+        statusDisplay.innerText = status.data.name;
+        detailDisplay.innerHTML = `
+          <div class="time-block">
+            <div class="start-time">${status.data.start} ~</div>
+            <div class="end-time">${status.data.end}</div>
+          </div>
+          <div class="passed-time">
+            <span class="num">${status.passedMin}<span class="unit">min</span></span>
+            <span class="sub-text">経過</span>
+          </div>
+        `;
+
+      } else if (status.type === 'break') {
+        body.classList.add('status-break');
+        // 「1限 ⇒ 2限」の「限」を取って「1 ⇒ 2」と表示
+        const prevName = status.prev.name.replace('限', '');
+        const nextName = status.next.name.replace('限', '');
+        statusDisplay.innerText = `${prevName} ⇒ ${nextName}`;
+        detailDisplay.innerHTML = `
+          <div class="time-block">
+            <div class="start-time">次枠開始まで</div>
+            <div class="end-time">${status.next.start}</div>
+          </div>
+          <div class="passed-time">
+            <span class="sub-text">あと</span>
+            <span class="num">${status.remainingMin}<span class="unit">min</span></span>
+          </div>
+        `;
+
+      } else if (status.type === 'before') {
+        body.classList.add('status-out');
+        statusDisplay.innerText = "開室中";
+        detailDisplay.innerHTML = `
+          <div class="time-block">
+            <div class="start-time">最初の授業</div>
+            <div class="end-time">${status.next.start}</div>
+          </div>
+        `;
+
+      } else if (status.type === 'after') {
+        body.classList.add('status-out');
+        statusDisplay.innerText = "授業終了";
+        detailDisplay.innerHTML = `
+          <div class="time-block">
+            <div class="start-time">本日の授業は</div>
+            <div class="end-time" style="font-size: 5vw;">全て終了</div>
+          </div>
+        `;
+      }
+    }
+
+    // --- 初期化とタイマー起動 ---
+    updateView(); // 開いた瞬間に1回実行
+    setInterval(updateView, 1000); // 以降、1秒ごとに実行
+
+  </script>
+</body>
+</html>
