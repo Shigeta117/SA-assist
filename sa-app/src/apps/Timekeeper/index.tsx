@@ -175,7 +175,7 @@ export default function Timekeeper({ settings }: Props) {
         <div className="text-4xl md:text-5xl lg:text-6xl font-bold opacity-80 mb-4 tracking-wider">
           {now.getFullYear()}年{now.getMonth() + 1}月{now.getDate()}日({days[now.getDay()]})
         </div>
-        <div className="text-[12vw] font-black leading-none tracking-tighter tabular-nums drop-shadow-sm">
+        <div className="text-[18vw] font-black leading-none tracking-tighter tabular-nums drop-shadow-sm">
           {String(now.getHours()).padStart(2, '0')}:
           {String(now.getMinutes()).padStart(2, '0')}:
           {String(now.getSeconds()).padStart(2, '0')}
@@ -198,14 +198,14 @@ export default function Timekeeper({ settings }: Props) {
           {status.type === 'class' && (
             <>
               <div className="flex flex-col justify-center items-center">
-                <div className="text-3xl font-bold opacity-70 mb-2">{status.currentClass?.start} ~</div>
-                <div className="text-6xl lg:text-7xl font-black">{status.currentClass?.end}</div>
+                <div className="text-4xl font-bold opacity-70 mb-2">{status.currentClass?.start} ~</div>
+                <div className="text-7xl lg:text-8xl font-black">{status.currentClass?.end}</div>
               </div>
               <div className="flex flex-col justify-center items-center bg-white/40 p-6 rounded-3xl shadow-sm backdrop-blur-sm">
-                <span className="text-6xl lg:text-7xl font-black leading-none mb-1">
-                  {status.passedMin}<span className="text-2xl ml-1">min</span>
+                <span className="text-7xl lg:text-8xl font-black leading-none mb-1">
+                  {status.passedMin}<span className="text-3xl ml-1">min</span>
                 </span>
-                <span className="text-2xl font-bold opacity-80">経過</span>
+                <span className="text-3xl font-bold opacity-80">経過</span>
               </div>
             </>
           )}
@@ -213,13 +213,13 @@ export default function Timekeeper({ settings }: Props) {
           {status.type === 'break' && (
             <>
               <div className="flex flex-col justify-center items-center">
-                <div className="text-2xl font-bold opacity-70 mb-2">次枠開始まで</div>
-                <div className="text-6xl lg:text-7xl font-black">{status.nextClass?.start}</div>
+                <div className="text-3xl font-bold opacity-70 mb-2">次枠開始まで</div>
+                <div className="text-7xl lg:text-8xl font-black">{status.nextClass?.start}</div>
               </div>
               <div className="flex flex-col justify-center items-center bg-white/40 p-6 rounded-3xl shadow-sm backdrop-blur-sm">
-                <span className="text-2xl font-bold opacity-80 mb-1">あと</span>
-                <span className="text-6xl lg:text-7xl font-black leading-none">
-                  {status.remainingMin}<span className="text-2xl ml-1">min</span>
+                <span className="text-3xl font-bold opacity-80 mb-1">あと</span>
+                <span className="text-7xl lg:text-8xl font-black leading-none">
+                  {status.remainingMin}<span className="text-3xl ml-1">min</span>
                 </span>
               </div>
             </>
