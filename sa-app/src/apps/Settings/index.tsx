@@ -34,7 +34,7 @@ export default function Settings({ settings, onSave }: Props) {
     <div className="w-full h-full flex flex-col bg-gray-50 overflow-hidden">
       {/* Header */}
       <div className="flex-none bg-white border-b border-gray-200 px-6 py-4 flex justify-between items-center pl-16">
-        <h1 className="text-xl font-bold text-gray-800">共通設定 (Firestore同期)</h1>
+        <h1 className="text-2xl font-bold text-gray-800">共通設定 (Firestore同期)</h1>
         <button 
           onClick={handleSave} 
           disabled={saving}
@@ -53,15 +53,15 @@ export default function Settings({ settings, onSave }: Props) {
           <section className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
             <div className="flex items-center space-x-2 mb-6 border-b pb-4">
               <Clock className="w-6 h-6 text-blue-500" />
-              <h2 className="text-xl font-bold text-gray-800">Timekeeper 設定</h2>
+              <h2 className="text-2xl font-bold text-gray-800">Timekeeper 設定</h2>
             </div>
             
             <div className="space-y-8">
               {/* Timetable */}
               <div>
                 <div className="flex justify-between items-center mb-4">
-                  <label className="text-sm font-bold text-gray-700">時間割 (授業枠)</label>
-                  <button onClick={() => updateTimekeeper({ timetable: [...localSettings.timekeeper.timetable, { id: Date.now().toString(), name: '新枠', start: '00:00', end: '00:00' }] })} className="text-blue-600 hover:bg-blue-50 p-1.5 rounded-lg flex items-center text-sm font-medium">
+                  <label className="text-base font-bold text-gray-700">時間割 (授業枠)</label>
+                  <button onClick={() => updateTimekeeper({ timetable: [...localSettings.timekeeper.timetable, { id: Date.now().toString(), name: '新枠', start: '00:00', end: '00:00' }] })} className="text-blue-600 hover:bg-blue-50 p-1.5 rounded-lg flex items-center text-base font-medium">
                     <Plus className="w-4 h-4 mr-1" /> 追加
                   </button>
                 </div>
@@ -72,18 +72,18 @@ export default function Settings({ settings, onSave }: Props) {
                         const newTb = [...localSettings.timekeeper.timetable];
                         newTb[idx].name = e.target.value;
                         updateTimekeeper({ timetable: newTb });
-                      }} className="w-24 bg-white border border-gray-300 rounded px-3 py-1.5 text-sm focus:ring-blue-500 focus:border-blue-500" />
+                      }} className="w-24 bg-white border border-gray-300 rounded px-3 py-1.5 text-base focus:ring-blue-500 focus:border-blue-500" />
                       <input type="time" value={cls.start} onChange={e => {
                         const newTb = [...localSettings.timekeeper.timetable];
                         newTb[idx].start = e.target.value;
                         updateTimekeeper({ timetable: newTb });
-                      }} className="bg-white border border-gray-300 rounded px-3 py-1.5 text-sm focus:ring-blue-500 focus:border-blue-500" />
+                      }} className="bg-white border border-gray-300 rounded px-3 py-1.5 text-base focus:ring-blue-500 focus:border-blue-500" />
                       <span className="text-gray-400">~</span>
                       <input type="time" value={cls.end} onChange={e => {
                         const newTb = [...localSettings.timekeeper.timetable];
                         newTb[idx].end = e.target.value;
                         updateTimekeeper({ timetable: newTb });
-                      }} className="bg-white border border-gray-300 rounded px-3 py-1.5 text-sm focus:ring-blue-500 focus:border-blue-500" />
+                      }} className="bg-white border border-gray-300 rounded px-3 py-1.5 text-base focus:ring-blue-500 focus:border-blue-500" />
                       <div className="flex-1" />
                       <button onClick={() => {
                         const newTb = localSettings.timekeeper.timetable.filter((_, i) => i !== idx);
@@ -99,8 +99,8 @@ export default function Settings({ settings, onSave }: Props) {
               {/* Shift End Times */}
               <div>
                 <div className="flex justify-between items-center mb-4">
-                  <label className="text-sm font-bold text-gray-700">退勤アラーム時刻 (HH:MM)</label>
-                  <button onClick={() => updateTimekeeper({ shiftEndTimes: [...localSettings.timekeeper.shiftEndTimes, '00:00'] })} className="text-blue-600 hover:bg-blue-50 p-1.5 rounded-lg flex items-center text-sm font-medium">
+                  <label className="text-base font-bold text-gray-700">退勤アラーム時刻 (HH:MM)</label>
+                  <button onClick={() => updateTimekeeper({ shiftEndTimes: [...localSettings.timekeeper.shiftEndTimes, '00:00'] })} className="text-blue-600 hover:bg-blue-50 p-1.5 rounded-lg flex items-center text-base font-medium">
                     <Plus className="w-4 h-4 mr-1" /> 追加
                   </button>
                 </div>
@@ -111,7 +111,7 @@ export default function Settings({ settings, onSave }: Props) {
                         const newTimes = [...localSettings.timekeeper.shiftEndTimes];
                         newTimes[idx] = e.target.value;
                         updateTimekeeper({ shiftEndTimes: newTimes });
-                      }} className="bg-transparent border-none px-3 py-2 text-sm focus:ring-0" />
+                      }} className="bg-transparent border-none px-3 py-2 text-base focus:ring-0" />
                       <button onClick={() => {
                         const newTimes = localSettings.timekeeper.shiftEndTimes.filter((_, i) => i !== idx);
                         updateTimekeeper({ shiftEndTimes: newTimes });
@@ -129,15 +129,15 @@ export default function Settings({ settings, onSave }: Props) {
           <section className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
             <div className="flex items-center space-x-2 mb-6 border-b pb-4">
               <CheckSquare className="w-6 h-6 text-green-500" />
-              <h2 className="text-xl font-bold text-gray-800">業務日誌 設定</h2>
+              <h2 className="text-2xl font-bold text-gray-800">業務日誌 設定</h2>
             </div>
 
             <div className="space-y-8">
               {/* Tasks */}
               <div>
                 <div className="flex justify-between items-center mb-4">
-                  <label className="text-sm font-bold text-gray-700">定型業務リスト</label>
-                  <button onClick={() => updateWorkLog({ tasks: [...localSettings.workLog.tasks, '新規業務'] })} className="text-green-600 hover:bg-green-50 p-1.5 rounded-lg flex items-center text-sm font-medium">
+                  <label className="text-base font-bold text-gray-700">定型業務リスト</label>
+                  <button onClick={() => updateWorkLog({ tasks: [...localSettings.workLog.tasks, '新規業務'] })} className="text-green-600 hover:bg-green-50 p-1.5 rounded-lg flex items-center text-base font-medium">
                     <Plus className="w-4 h-4 mr-1" /> 追加
                   </button>
                 </div>
@@ -148,7 +148,7 @@ export default function Settings({ settings, onSave }: Props) {
                         const newTasks = [...localSettings.workLog.tasks];
                         newTasks[idx] = e.target.value;
                         updateWorkLog({ tasks: newTasks });
-                      }} className="w-full bg-transparent border-none px-3 py-2 text-sm focus:ring-0" />
+                      }} className="w-full bg-transparent border-none px-3 py-2 text-base focus:ring-0" />
                       <button onClick={() => {
                         const newTasks = localSettings.workLog.tasks.filter((_, i) => i !== idx);
                         updateWorkLog({ tasks: newTasks });
@@ -163,8 +163,8 @@ export default function Settings({ settings, onSave }: Props) {
               {/* Tags */}
               <div>
                 <div className="flex justify-between items-center mb-4">
-                  <label className="text-sm font-bold text-gray-700">クイックインサートタグ (見出し)</label>
-                  <button onClick={() => updateWorkLog({ tags: [...localSettings.workLog.tags, '【新規タグ】'] })} className="text-green-600 hover:bg-green-50 p-1.5 rounded-lg flex items-center text-sm font-medium">
+                  <label className="text-base font-bold text-gray-700">クイックインサートタグ (見出し)</label>
+                  <button onClick={() => updateWorkLog({ tags: [...localSettings.workLog.tags, '【新規タグ】'] })} className="text-green-600 hover:bg-green-50 p-1.5 rounded-lg flex items-center text-base font-medium">
                     <Plus className="w-4 h-4 mr-1" /> 追加
                   </button>
                 </div>
@@ -175,7 +175,7 @@ export default function Settings({ settings, onSave }: Props) {
                         const newTags = [...localSettings.workLog.tags];
                         newTags[idx] = e.target.value;
                         updateWorkLog({ tags: newTags });
-                      }} className="bg-transparent border-none px-3 py-2 text-sm focus:ring-0 w-32 md:w-40" />
+                      }} className="bg-transparent border-none px-3 py-2 text-base focus:ring-0 w-36 md:w-44" />
                       <button onClick={() => {
                         const newTags = localSettings.workLog.tags.filter((_, i) => i !== idx);
                         updateWorkLog({ tags: newTags });

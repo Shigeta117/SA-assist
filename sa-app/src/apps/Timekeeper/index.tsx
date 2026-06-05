@@ -63,6 +63,7 @@ function scheduleJiho(nowDate: Date) {
 export default function Timekeeper({ settings }: Props) {
   const [now, setNow] = useState(new Date());
   const [timeOffset, setTimeOffset] = useState<number>(0);
+  const [debugOffset, setDebugOffset] = useState<number>(0);
   const [toastShiftTime, setToastShiftTime] = useState<string | null>(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
   
@@ -91,8 +92,8 @@ export default function Timekeeper({ settings }: Props) {
   }, []);
 
   useEffect(() => {
-    const timer = setInterval(() => {
-      const d = new Date(Date.now() + timeOffset);
+    const updateTime = () => {
+      const d = new Date(Date.now() + timeOffset + debugOffset);
       setNow(d);
       
       // Alarm Logic
@@ -116,10 +117,12 @@ export default function Timekeeper({ settings }: Props) {
       } else {
         lastAlarmCheckedMinute.current = "";
       }
-      
-    }, 1000);
+    };
+
+    updateTime(); // update immediately so UI reacts instantly to debugOffset changes
+    const timer = setInterval(updateTime, 1000);
     return () => clearInterval(timer);
-  }, [settings]);
+  }, [settings, timeOffset, debugOffset]);
 
   useEffect(() => {
     const handleFullscreenChange = () => {
@@ -148,7 +151,7 @@ export default function Timekeeper({ settings }: Props) {
       const startMin = timeToMinutes(currentClass.start);
       const endMin = timeToMinutes(currentClass.end);
       
-      if (nowMinutes >= startMin && nowMinutes <= endMin) {
+      if (nowMinutes >= startMin && nowMinutes < endMin) {
         status = { type: 'class', currentClass, passedMin: nowMinutes - startMin };
         found = true;
         break;
@@ -157,7 +160,7 @@ export default function Timekeeper({ settings }: Props) {
       if (i < settings.timetable.length - 1) {
         const nextClass = settings.timetable[i + 1];
         const nextStartMin = timeToMinutes(nextClass.start);
-        if (nowMinutes > endMin && nowMinutes < nextStartMin) {
+        if (nowMinutes >= endMin && nowMinutes < nextStartMin) {
           status = { type: 'break', prevClass: currentClass, nextClass, remainingMin: nextStartMin - nowMinutes };
           found = true;
           break;
@@ -234,40 +237,39 @@ export default function Timekeeper({ settings }: Props) {
       <div className="flex-[2] flex flex-col md:flex-row">
         
         {/* Status Display */}
-        <div className={clsx("flex-1 flex justify-center items-center text-[6vw] font-black border-r-0 md:border-r-2 border-black/5 transition-colors duration-1000 text-center p-4 leading-tight", themeLeftBg)}>
+        <div className={clsx("flex-1 flex justify-center items-center text-[8vw] md:text-[6vw] font-black border-r-0 md:border-r-2 border-black/5 transition-colors duration-1000 text-center p-4 leading-none tracking-tight", themeLeftBg)}>
           {status.type === 'class' && status.currentClass?.name}
           {status.type === 'break' && `${status.prevClass?.name.replace('限','')} ⇒ ${status.nextClass?.name.replace('限','')}`}
           {status.type === 'before' && "開室中"}
           {status.type === 'after' && "授業終了"}
         </div>
 
-        {/* Detail Display */}
-        <div className="flex-1 flex justify-around items-center p-8 bg-black/5 md:bg-transparent">
+        {/* Info Display */}
+        <div className="flex-[2] flex flex-col xl:flex-row justify-around items-center p-4 md:p-8 transition-colors duration-1000 gap-8 bg-black/5 md:bg-transparent overflow-hidden w-full">
           {status.type === 'class' && (
             <>
-              <div className="flex flex-col justify-center items-center">
-                <div className="text-4xl font-bold opacity-70 mb-2">{status.currentClass?.start} ~</div>
-                <div className="text-7xl lg:text-8xl font-black">{status.currentClass?.end}</div>
+              <div className="flex flex-col justify-center items-start">
+                <div className="text-4xl md:text-[4vw] font-bold opacity-70 mb-2 leading-none">{status.currentClass?.start} ~</div>
+                <div className="text-7xl md:text-[10vw] lg:text-[12vw] font-black leading-none tracking-tighter">{status.currentClass?.end}</div>
               </div>
-              <div className="flex flex-col justify-center items-center bg-white/40 p-6 rounded-3xl shadow-sm backdrop-blur-sm">
-                <span className="text-7xl lg:text-8xl font-black leading-none mb-1">
-                  {status.passedMin}<span className="text-3xl ml-1">min</span>
+              <div className="flex flex-col justify-center items-center bg-white/40 p-6 md:px-10 md:py-6 rounded-3xl md:rounded-[3rem] shadow-sm backdrop-blur-sm mt-2">
+                <span className="text-6xl md:text-[6vw] lg:text-[8vw] font-black leading-none tracking-tighter text-center">
+                  {status.passedMin}<span className="text-2xl md:text-[2.5vw] ml-2 md:ml-4 font-bold tracking-normal">min</span>
                 </span>
-                <span className="text-3xl font-bold opacity-80">経過</span>
+                <span className="text-2xl md:text-[2.5vw] font-bold opacity-80 mt-2 leading-none">経過</span>
               </div>
             </>
           )}
-
           {status.type === 'break' && (
             <>
-              <div className="flex flex-col justify-center items-center">
-                <div className="text-3xl font-bold opacity-70 mb-2">次枠開始まで</div>
-                <div className="text-7xl lg:text-8xl font-black">{status.nextClass?.start}</div>
+              <div className="flex flex-col justify-center items-start">
+                <div className="text-4xl md:text-[4vw] font-bold opacity-70 mb-2 leading-none">次枠</div>
+                <div className="text-7xl md:text-[10vw] lg:text-[12vw] font-black leading-none tracking-tighter">{status.nextClass?.start} ~</div>
               </div>
-              <div className="flex flex-col justify-center items-center bg-white/40 p-6 rounded-3xl shadow-sm backdrop-blur-sm">
-                <span className="text-3xl font-bold opacity-80 mb-1">あと</span>
-                <span className="text-7xl lg:text-8xl font-black leading-none">
-                  {status.remainingMin}<span className="text-3xl ml-1">min</span>
+              <div className="flex flex-col justify-center items-center bg-white/40 p-6 md:px-10 md:py-6 rounded-3xl md:rounded-[3rem] shadow-sm backdrop-blur-sm mt-2">
+                <span className="text-2xl md:text-[2.5vw] font-bold opacity-80 mb-2 leading-none">開始まで...</span>
+                <span className="text-6xl md:text-[6vw] lg:text-[8vw] font-black leading-none tracking-tighter text-center">
+                  {status.remainingMin}<span className="text-2xl md:text-[2.5vw] ml-2 md:ml-4 font-bold tracking-normal">min</span>
                 </span>
               </div>
             </>
@@ -288,6 +290,29 @@ export default function Timekeeper({ settings }: Props) {
           )}
         </div>
       </div>
+
+      {/* Debug Panel (DEV ONLY) */}
+      {import.meta.env.DEV && (
+        <div className="absolute bottom-4 right-4 z-50 flex items-center gap-2 bg-white/80 backdrop-blur-md p-3 rounded-2xl shadow-lg border border-black/10 transition-opacity opacity-20 hover:opacity-100">
+          <span className="text-xs font-bold text-gray-500 mr-1 select-none pointer-events-none">DEBUG<br/>TIME</span>
+          <button 
+            onClick={() => setDebugOffset(prev => prev - 60000)}
+            className="w-10 h-10 rounded-xl bg-gray-100 hover:bg-gray-200 flex items-center justify-center font-bold text-gray-700 transition-colors"
+          >-1m</button>
+          <button 
+            onClick={() => setDebugOffset(prev => prev + 60000)}
+            className="w-10 h-10 rounded-xl bg-gray-100 hover:bg-gray-200 flex items-center justify-center font-bold text-gray-700 transition-colors"
+          >+1m</button>
+          <button 
+            onClick={() => setDebugOffset(prev => prev + 3600000)}
+            className="w-10 h-10 rounded-xl bg-gray-100 hover:bg-gray-200 flex items-center justify-center font-bold text-gray-700 transition-colors"
+          >+1h</button>
+          <button 
+            onClick={() => setDebugOffset(0)}
+            className="px-3 h-10 rounded-xl bg-red-100 hover:bg-red-200 flex items-center justify-center font-bold text-red-700 transition-colors"
+          >Reset</button>
+        </div>
+      )}
 
     </div>
   );
