@@ -2,7 +2,7 @@ import { useEffect, useState, useRef } from 'react';
 import type { TimekeeperSettings, TimekeeperClass } from '../../types';
 import { AnimatePresence, motion } from 'framer-motion';
 import clsx from 'clsx';
-import { Bell } from 'lucide-react';
+import { Bell, Maximize, Minimize } from 'lucide-react';
 
 interface Props {
   settings: TimekeeperSettings;
@@ -62,14 +62,37 @@ function scheduleJiho(nowDate: Date) {
 
 export default function Timekeeper({ settings }: Props) {
   const [now, setNow] = useState(new Date());
+  const [timeOffset, setTimeOffset] = useState<number>(0);
   const [toastShiftTime, setToastShiftTime] = useState<string | null>(null);
+  const [isFullscreen, setIsFullscreen] = useState(false);
   
   const lastAlarmCheckedMinute = useRef<string>("");
   const lastScheduledMinute = useRef<string>("");
 
   useEffect(() => {
+    const syncTime = async () => {
+      try {
+        // Fetch accurate time from external API
+        const res = await fetch('https://worldtimeapi.org/api/timezone/Asia/Tokyo');
+        const data = await res.json();
+        const externalTime = new Date(data.datetime).getTime();
+        const localTime = Date.now();
+        setTimeOffset(externalTime - localTime);
+        console.log(`Time synchronized. Offset: ${externalTime - localTime}ms`);
+      } catch (e) {
+        console.error('Failed to sync external time:', e);
+      }
+    };
+
+    syncTime();
+    // Re-sync every 1 hour to prevent drift
+    const syncTimer = setInterval(syncTime, 60 * 60 * 1000);
+    return () => clearInterval(syncTimer);
+  }, []);
+
+  useEffect(() => {
     const timer = setInterval(() => {
-      const d = new Date();
+      const d = new Date(Date.now() + timeOffset);
       setNow(d);
       
       // Alarm Logic
@@ -97,6 +120,22 @@ export default function Timekeeper({ settings }: Props) {
     }, 1000);
     return () => clearInterval(timer);
   }, [settings]);
+
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      setIsFullscreen(!!document.fullscreenElement);
+    };
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
+  }, []);
+
+  const toggleFullscreen = () => {
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen().catch(err => console.log(err));
+    } else {
+      document.exitFullscreen().catch(err => console.log(err));
+    }
+  };
 
   const nowMinutes = now.getHours() * 60 + now.getMinutes();
 
@@ -150,8 +189,17 @@ export default function Timekeeper({ settings }: Props) {
   }
 
   return (
-    <div className={clsx("w-full h-full flex flex-col transition-colors duration-1000", themeBg, themeText)}>
+    <div className={clsx("relative w-full h-full flex flex-col transition-colors duration-1000", themeBg, themeText)}>
       
+      {/* Fullscreen Toggle Button */}
+      <button
+        onClick={toggleFullscreen}
+        className="absolute top-4 right-4 z-30 p-3 bg-white/40 backdrop-blur shadow-sm hover:bg-white/60 hover:shadow-md rounded-full text-gray-700 transition-all duration-300 hover:scale-105 active:scale-95"
+        title="全画面表示の切り替え"
+      >
+        {isFullscreen ? <Minimize className="w-6 h-6" /> : <Maximize className="w-6 h-6" />}
+      </button>
+
       {/* Toast */}
       <AnimatePresence>
         {toastShiftTime && (
