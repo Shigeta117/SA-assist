@@ -237,57 +237,79 @@ export default function Timekeeper({ settings }: Props) {
       <div className="flex-[2] flex flex-col md:flex-row">
         
         {/* Status Display */}
-        <div className={clsx("flex-1 flex justify-center items-center text-[8vw] md:text-[6vw] font-black border-r-0 md:border-r-2 border-black/5 transition-colors duration-1000 text-center p-4 leading-none tracking-tight", themeLeftBg)}>
-          {status.type === 'class' && status.currentClass?.name}
-          {status.type === 'break' && `${status.prevClass?.name.replace('限','')} ⇒ ${status.nextClass?.name.replace('限','')}`}
-          {status.type === 'before' && "開室中"}
-          {status.type === 'after' && "授業終了"}
+        <div className={clsx("flex-1 relative flex justify-center items-center text-[8vw] md:text-[6vw] font-black border-r-0 md:border-r-2 border-black/5 transition-colors duration-1000 text-center p-4 leading-none tracking-tight overflow-hidden", themeLeftBg)}>
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={status.type}
+              initial={{ y: -40, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              exit={{ y: 40, opacity: 0 }}
+              transition={{ duration: 0.4, ease: "easeInOut" }}
+              className="absolute inset-0 flex justify-center items-center p-4"
+            >
+              {status.type === 'class' && status.currentClass?.name}
+              {status.type === 'break' && `${status.prevClass?.name.replace('限','')} ⇒ ${status.nextClass?.name.replace('限','')}`}
+              {status.type === 'before' && "開室中"}
+              {status.type === 'after' && "授業終了"}
+            </motion.div>
+          </AnimatePresence>
         </div>
 
         {/* Info Display */}
-        <div className="flex-[2] flex flex-col xl:flex-row justify-around items-center p-4 md:p-8 transition-colors duration-1000 gap-8 bg-black/5 md:bg-transparent overflow-hidden w-full">
-          {status.type === 'class' && (
-            <>
-              <div className="flex flex-col justify-center items-start">
-                <div className="text-4xl md:text-[4vw] font-bold opacity-70 mb-2 leading-none">{status.currentClass?.start} ~</div>
-                <div className="text-7xl md:text-[10vw] lg:text-[12vw] font-black leading-none tracking-tighter">{status.currentClass?.end}</div>
-              </div>
-              <div className="flex flex-col justify-center items-center bg-white/40 p-6 md:px-10 md:py-6 rounded-3xl md:rounded-[3rem] shadow-sm backdrop-blur-sm mt-2">
-                <span className="text-6xl md:text-[6vw] lg:text-[8vw] font-black leading-none tracking-tighter text-center">
-                  {status.passedMin}<span className="text-2xl md:text-[2.5vw] ml-2 md:ml-4 font-bold tracking-normal">min</span>
-                </span>
-                <span className="text-2xl md:text-[2.5vw] font-bold opacity-80 mt-2 leading-none">経過</span>
-              </div>
-            </>
-          )}
-          {status.type === 'break' && (
-            <>
-              <div className="flex flex-col justify-center items-start">
-                <div className="text-4xl md:text-[4vw] font-bold opacity-70 mb-2 leading-none">次枠</div>
-                <div className="text-7xl md:text-[10vw] lg:text-[12vw] font-black leading-none tracking-tighter">{status.nextClass?.start} ~</div>
-              </div>
-              <div className="flex flex-col justify-center items-center bg-white/40 p-6 md:px-10 md:py-6 rounded-3xl md:rounded-[3rem] shadow-sm backdrop-blur-sm mt-2">
-                <span className="text-2xl md:text-[2.5vw] font-bold opacity-80 mb-2 leading-none">開始まで...</span>
-                <span className="text-6xl md:text-[6vw] lg:text-[8vw] font-black leading-none tracking-tighter text-center">
-                  {status.remainingMin}<span className="text-2xl md:text-[2.5vw] ml-2 md:ml-4 font-bold tracking-normal">min</span>
-                </span>
-              </div>
-            </>
-          )}
+        <div className="flex-[2] relative overflow-hidden bg-black/5 md:bg-transparent transition-colors duration-1000 w-full">
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={status.type}
+              initial={{ y: 40, opacity: 0, scale: 0.95 }}
+              animate={{ y: 0, opacity: 1, scale: 1 }}
+              exit={{ y: -40, opacity: 0, scale: 1.05 }}
+              transition={{ duration: 0.4, ease: "easeInOut", delay: 0.1 }}
+              className="absolute inset-0 flex flex-col xl:flex-row justify-around items-center p-4 md:p-8 gap-8"
+            >
+              {status.type === 'class' && (
+                <>
+                  <div className="flex flex-col justify-center items-start">
+                    <div className="text-4xl md:text-[4vw] font-bold opacity-70 mb-2 leading-none">{status.currentClass?.start} ~</div>
+                    <div className="text-7xl md:text-[10vw] lg:text-[12vw] font-black leading-none tracking-tighter">{status.currentClass?.end}</div>
+                  </div>
+                  <div className="flex flex-col justify-center items-center bg-white/40 p-6 md:px-10 md:py-6 rounded-3xl md:rounded-[3rem] shadow-sm backdrop-blur-sm mt-2">
+                    <span className="text-6xl md:text-[6vw] lg:text-[8vw] font-black leading-none tracking-tighter text-center">
+                      {status.passedMin}<span className="text-2xl md:text-[2.5vw] ml-2 md:ml-4 font-bold tracking-normal">min</span>
+                    </span>
+                    <span className="text-2xl md:text-[2.5vw] font-bold opacity-80 mt-2 leading-none">経過</span>
+                  </div>
+                </>
+              )}
+              {status.type === 'break' && (
+                <>
+                  <div className="flex flex-col justify-center items-start">
+                    <div className="text-4xl md:text-[4vw] font-bold opacity-70 mb-2 leading-none">次枠</div>
+                    <div className="text-7xl md:text-[10vw] lg:text-[12vw] font-black leading-none tracking-tighter">{status.nextClass?.start} ~</div>
+                  </div>
+                  <div className="flex flex-col justify-center items-center bg-white/40 p-6 md:px-10 md:py-6 rounded-3xl md:rounded-[3rem] shadow-sm backdrop-blur-sm mt-2">
+                    <span className="text-2xl md:text-[2.5vw] font-bold opacity-80 mb-2 leading-none">開始まで...</span>
+                    <span className="text-6xl md:text-[6vw] lg:text-[8vw] font-black leading-none tracking-tighter text-center">
+                      {status.remainingMin}<span className="text-2xl md:text-[2.5vw] ml-2 md:ml-4 font-bold tracking-normal">min</span>
+                    </span>
+                  </div>
+                </>
+              )}
 
-          {status.type === 'before' && (
-            <div className="flex flex-col justify-center items-center w-full">
-              <div className="text-3xl font-bold opacity-70 mb-2">最初の授業</div>
-              <div className="text-6xl lg:text-8xl font-black">{status.nextClass?.start}</div>
-            </div>
-          )}
+              {status.type === 'before' && (
+                <div className="flex flex-col justify-center items-center w-full">
+                  <div className="text-3xl font-bold opacity-70 mb-2">最初の授業</div>
+                  <div className="text-6xl lg:text-8xl font-black">{status.nextClass?.start}</div>
+                </div>
+              )}
 
-          {status.type === 'after' && (
-            <div className="flex flex-col justify-center items-center w-full">
-              <div className="text-3xl font-bold opacity-70 mb-2">本日の授業は</div>
-              <div className="text-5xl lg:text-7xl font-black">全て終了</div>
-            </div>
-          )}
+              {status.type === 'after' && (
+                <div className="flex flex-col justify-center items-center w-full">
+                  <div className="text-3xl font-bold opacity-70 mb-2">本日の授業は</div>
+                  <div className="text-5xl lg:text-7xl font-black">全て終了</div>
+                </div>
+              )}
+            </motion.div>
+          </AnimatePresence>
         </div>
       </div>
 
