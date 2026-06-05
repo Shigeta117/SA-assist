@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import Setup from './Setup';
 import AmidakujiBoard from './AmidakujiBoard';
 import type { GroupConfig } from './types';

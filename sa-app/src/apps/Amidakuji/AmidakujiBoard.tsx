@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useRef, useEffect } from 'react';
+import { useMemo, useState, useRef, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { ArrowLeft, FastForward, CheckCircle2, MousePointer2 } from 'lucide-react';
 import type { GroupConfig } from './types';
