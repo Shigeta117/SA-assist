@@ -2,6 +2,7 @@
 
 @layer base {
   body {
+    font-family: 'Noto Sans JP', sans-serif;
     @apply antialiased overflow-hidden text-gray-900 bg-gray-50 m-0 p-0 h-screen w-screen transition-colors duration-500;
   }
 }

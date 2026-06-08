@@ -32,6 +32,7 @@ const TABS: { id: TabType; label: string; icon: React.ElementType }[] = [
 export default function WorkLog({ settings }: Props) {
   const [activeTab, setActiveTab] = useState<TabType>('title');
   const [copiedStates, setCopiedStates] = useState<Record<string, boolean>>({});
+  const [isCustomOpen, setIsCustomOpen] = useState(false);
 
   const [state, setState] = useState<WorkLogState>(() => {
     const saved = localStorage.getItem(STORAGE_KEY);
@@ -90,8 +91,9 @@ export default function WorkLog({ settings }: Props) {
   const periodStr = state.isTemp ? '臨時シフト' : state.periods.length > 0 ? state.periods.join(', ') + '限' : '';
   const titleResult = [dateStr, periodStr, state.sa ? 'SA' : '', state.surname].filter(Boolean).join(' ');
   const allTasks = [...state.selectedTasks, ...state.customTask.split('\n').map(t => t.trim()).filter(Boolean)];
-  const taskResult = allTasks.length > 0 ? `【業務内容】\n${allTasks.join('、')}` : '';
-  const outputBody = (taskResult ? taskResult + '\n\n' : '') + state.bodyText;
+  const taskResultPreview = allTasks.length > 0 ? `【業務内容】${allTasks.join('、')}` : '';
+  const taskResultOutput = allTasks.length > 0 ? `【業務内容】\n${allTasks.join('、')}` : '';
+  const outputBody = (taskResultOutput ? taskResultOutput + '\n\n' : '') + state.bodyText;
 
   const currentIndex = TABS.findIndex(t => t.id === activeTab);
   const hasPrev = currentIndex > 0;
@@ -117,40 +119,14 @@ export default function WorkLog({ settings }: Props) {
           {/* ── STEP 1: タイトル ── */}
           {activeTab === 'title' && (
             <StepContainer id="title" title="タイトル生成">
-              <div className="flex-1 overflow-y-auto space-y-8 px-4 -mx-4 pt-4 -mt-4 relative">
-                {/* Date */}
-                <div className="relative z-10">
-                  <label className="block text-base font-bold text-slate-700 mb-1">今日の日付</label>
-                  <p className="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-br from-blue-600 to-blue-800 drop-shadow-sm">{dateStr}</p>
-                </div>
-
-                {/* Period */}
-                <div className="relative z-10">
-                  <label className="block text-base font-bold text-slate-700 mb-3">時限（複数選択可）</label>
-                  <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-7 gap-3 sm:gap-4 px-1 py-1 -mx-1">
-                    {['1','2','3','4','5','6'].map(p => (
-                      <SelectableCard
-                        key={p}
-                        checked={state.periods.includes(p)}
-                        onChange={() => togglePeriod(p)}
-                        disabled={state.isTemp}
-                        label={`${p}限`}
-                      />
-                    ))}
-                    
-                    {/* Temp Shift */}
-                    <SelectableCard
-                      checked={state.isTemp}
-                      onChange={(checked) => update({ isTemp: checked, periods: checked ? [] : state.periods })}
-                      label="臨時"
-                      color="amber"
-                      labelSize="text-sm sm:text-base"
-                    />
+              <div className="flex-1 overflow-y-auto space-y-4 md:space-y-8 px-4 -mx-4 pt-2 -mt-2 relative">
+                {/* Date & Options */}
+                <div className="flex flex-wrap items-end gap-8 relative z-10">
+                  <div>
+                    <label className="block text-base font-bold text-slate-700 mb-1">今日の日付</label>
+                    <p className="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-br from-blue-600 to-blue-800 drop-shadow-sm h-[46px] flex items-center leading-none">{dateStr}</p>
                   </div>
-                </div>
 
-                {/* SA + Name */}
-                <div className="flex flex-wrap items-start gap-8 relative z-10">
                   {/* Option Toggle */}
                   <div className="flex flex-col justify-start">
                     <label className="block text-base font-bold text-slate-700 mb-2">オプション</label>
@@ -191,6 +167,31 @@ export default function WorkLog({ settings }: Props) {
                     />
                   </div>
                 </div>
+
+                {/* Period */}
+                <div className="relative z-10">
+                  <label className="block text-base font-bold text-slate-700 mb-3">時限（複数選択可）</label>
+                  <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-7 gap-3 sm:gap-4 px-1 py-1 -mx-1">
+                    {['1','2','3','4','5','6'].map(p => (
+                      <SelectableCard
+                        key={p}
+                        checked={state.periods.includes(p)}
+                        onChange={() => togglePeriod(p)}
+                        disabled={state.isTemp}
+                        label={`${p}限`}
+                      />
+                    ))}
+                    
+                    {/* Temp Shift */}
+                    <SelectableCard
+                      checked={state.isTemp}
+                      onChange={(checked) => update({ isTemp: checked, periods: checked ? [] : state.periods })}
+                      label="臨時"
+                      color="amber"
+                      labelSize="text-sm sm:text-base"
+                    />
+                  </div>
+                </div>
                 
                 {/* Decorative Background */}
                 <DecorativeBackground type="step1" />
@@ -203,45 +204,59 @@ export default function WorkLog({ settings }: Props) {
           {/* ── STEP 2: 業務内容 ── */}
           {activeTab === 'task' && (
             <StepContainer id="task" title="業務内容生成">
-              <div className="flex-1 overflow-hidden space-y-6 pr-1 flex flex-col relative">
-                {/* Preset tasks */}
-                <div className="flex-1 flex flex-col min-h-0 relative z-10">
-                  <label className="block text-base font-bold text-slate-700 mb-3 flex-none">定型業務（複数選択可）</label>
-                  <div className="flex-1 overflow-y-auto px-4 pb-8 pt-4 -mx-4 -mt-4">
-                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-                      {settings.tasks.map(task => (
-                        <SelectableCard
-                          key={task}
-                          checked={state.selectedTasks.includes(task)}
-                          onChange={() => toggleTask(task)}
-                          label={task}
-                          gap="gap-3"
-                          padding="px-4 py-6"
-                          labelSize="text-sm"
-                          iconWrapperSize="w-7 h-7"
-                          checkIconSize="w-4 h-4"
-                        />
-                      ))}
-                    </div>
+              <div className="flex-1 overflow-y-auto pr-1 flex flex-col relative px-4 -mx-4">
+                <div className="relative z-10 py-2 md:py-4 flex flex-col min-h-0 space-y-6">
+                  {/* Preset tasks grid */}
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                    {settings.tasks.map(task => (
+                      <SelectableCard
+                        key={task}
+                        checked={state.selectedTasks.includes(task)}
+                        onChange={() => toggleTask(task)}
+                        label={task}
+                        gap="gap-3"
+                        padding="px-3 py-4 md:px-4 md:py-6"
+                        labelSize="text-sm"
+                        iconWrapperSize="w-7 h-7"
+                        checkIconSize="w-4 h-4"
+                      />
+                    ))}
                   </div>
-                </div>
 
-                {/* Custom tasks */}
-                <div className="flex-none bg-white/50 backdrop-blur-md border border-slate-200/60 rounded-2xl p-5 shadow-sm relative z-10">
-                  <label className="block text-sm font-bold text-slate-700 mb-3">その他の業務 <span className="text-slate-400 font-medium ml-2">※オプション（改行で複数入力）</span></label>
-                  <textarea
-                    value={state.customTask}
-                    onChange={e => update({ customTask: e.target.value })}
-                    placeholder="例: 機材メンテナンス"
-                    className="w-full h-[72px] border border-slate-300/60 rounded-xl px-4 py-3 text-sm resize-none bg-white/70 focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-100 focus:outline-none transition-all leading-relaxed"
-                  />
+                  {/* Custom tasks */}
+                  <div className="flex-none bg-white/50 backdrop-blur-md border border-slate-200/60 rounded-2xl p-5 shadow-sm">
+                    <button 
+                      onClick={() => setIsCustomOpen(!isCustomOpen)}
+                      className="w-full flex justify-between items-center text-sm font-bold text-slate-700 outline-none cursor-pointer group"
+                    >
+                      <span>その他の業務 <span className="text-slate-400 font-medium ml-2">※オプション（改行で複数入力）</span></span>
+                      <span className="text-slate-400 group-hover:text-blue-500 transition-colors">{isCustomOpen ? '▲' : '▼'}</span>
+                    </button>
+                    <AnimatePresence>
+                      {isCustomOpen && (
+                        <motion.div
+                          initial={{ height: 0, opacity: 0, marginTop: 0 }}
+                          animate={{ height: 'auto', opacity: 1, marginTop: 12 }}
+                          exit={{ height: 0, opacity: 0, marginTop: 0 }}
+                          className="overflow-hidden"
+                        >
+                          <textarea
+                            value={state.customTask}
+                            onChange={e => update({ customTask: e.target.value })}
+                            placeholder="例: 機材メンテナンス"
+                            className="w-full h-[72px] border border-slate-300/60 rounded-xl px-4 py-3 text-sm resize-none bg-white/70 focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-100 focus:outline-none transition-all leading-relaxed"
+                          />
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
                 </div>
                 
                 {/* Decorative Background */}
                 <DecorativeBackground type="step2" />
               </div>
 
-              <PreviewSection id="task" value={taskResult} copied={copiedStates['task']} onCopy={handleCopy} isTextArea />
+              <PreviewSection id="task" value={taskResultPreview} copied={copiedStates['task']} onCopy={handleCopy} />
             </StepContainer>
           )}
 
@@ -403,10 +418,10 @@ function StepContainer({ id, title, titleRight, children }: { id: string; title:
       key={id}
       initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }}
       transition={{ duration: 0.18 }}
-      className="absolute inset-0 flex flex-col p-5 md:p-8"
+      className="absolute inset-0 flex flex-col p-4 md:p-6 lg:p-8"
     >
       <div className="w-full flex flex-col h-full max-w-7xl mx-auto">
-        <div className={clsx("flex-none flex justify-between items-end border-b border-gray-200 pb-3 mb-5", !titleRight && "items-start")}>
+        <div className={clsx("flex-none flex justify-between items-end border-b border-gray-200 pb-2 mb-3 md:pb-3 md:mb-5", !titleRight && "items-start")}>
           <h2 className="text-2xl font-bold text-gray-800">{title}</h2>
           {titleRight}
         </div>

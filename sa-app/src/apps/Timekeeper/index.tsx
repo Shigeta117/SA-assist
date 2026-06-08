@@ -273,7 +273,7 @@ export default function Timekeeper({ settings }: Props) {
                     <div className="text-7xl md:text-[10vw] lg:text-[12vw] font-black leading-none tracking-tighter">{status.currentClass?.end}</div>
                   </div>
                   <div className="flex flex-col justify-center items-center bg-white/40 p-6 md:px-10 md:py-6 rounded-3xl md:rounded-[3rem] shadow-sm backdrop-blur-sm mt-2">
-                    <span className="text-6xl md:text-[6vw] lg:text-[8vw] font-black leading-none tracking-tighter text-center">
+                    <span className="text-6xl md:text-[6vw] lg:text-[8vw] font-black leading-none tracking-tighter text-center whitespace-nowrap">
                       {status.passedMin}<span className="text-2xl md:text-[2.5vw] ml-2 md:ml-4 font-bold tracking-normal">min</span>
                     </span>
                     <span className="text-2xl md:text-[2.5vw] font-bold opacity-80 mt-2 leading-none">経過</span>
@@ -288,7 +288,7 @@ export default function Timekeeper({ settings }: Props) {
                   </div>
                   <div className="flex flex-col justify-center items-center bg-white/40 p-6 md:px-10 md:py-6 rounded-3xl md:rounded-[3rem] shadow-sm backdrop-blur-sm mt-2">
                     <span className="text-2xl md:text-[2.5vw] font-bold opacity-80 mb-2 leading-none">開始まで...</span>
-                    <span className="text-6xl md:text-[6vw] lg:text-[8vw] font-black leading-none tracking-tighter text-center">
+                    <span className="text-6xl md:text-[6vw] lg:text-[8vw] font-black leading-none tracking-tighter text-center whitespace-nowrap">
                       {status.remainingMin}<span className="text-2xl md:text-[2.5vw] ml-2 md:ml-4 font-bold tracking-normal">min</span>
                     </span>
                   </div>
