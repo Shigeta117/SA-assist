@@ -4,6 +4,7 @@ import type { AppMode } from './components/Sidebar';
 import Timekeeper from './apps/Timekeeper';
 import WorkLog from './apps/WorkLog';
 import Amidakuji from './apps/Amidakuji';
+import NameCheck from './apps/NameCheck';
 import Settings from './apps/Settings';
 import { useSettings } from './hooks/useSettings';
 import { SplashScreen } from './components/SplashScreen';
@@ -28,6 +29,7 @@ function App() {
             {activeApp === 'timekeeper' && <Timekeeper settings={settings.timekeeper} />}
             {activeApp === 'worklog' && <WorkLog settings={settings.workLog} />}
             {activeApp === 'amidakuji' && <Amidakuji />}
+            {activeApp === 'namecheck' && <NameCheck />}
             {activeApp === 'settings' && <Settings settings={settings} onSave={saveSettings} />}
           </Layout>
         )}

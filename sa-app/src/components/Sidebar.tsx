@@ -1,9 +1,9 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Clock, FileText, Settings, X, Waypoints } from 'lucide-react';
+import { Clock, FileText, Settings, X, Waypoints, GraduationCap } from 'lucide-react';
 import clsx from 'clsx';
 
-export type AppMode = 'timekeeper' | 'worklog' | 'amidakuji' | 'settings';
+export type AppMode = 'timekeeper' | 'worklog' | 'amidakuji' | 'namecheck' | 'settings';
 
 interface SidebarProps {
   isOpen: boolean;
@@ -17,6 +17,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, activeApp, on
     { id: 'timekeeper', label: 'Timekeeper', icon: Clock },
     { id: 'worklog', label: '業務日誌生成', icon: FileText },
     { id: 'amidakuji', label: 'あみだくじ', icon: Waypoints },
+    { id: 'namecheck', label: '名前読みチェック', icon: GraduationCap },
     { id: 'settings', label: '設定 (共通)', icon: Settings },
   ];
 
